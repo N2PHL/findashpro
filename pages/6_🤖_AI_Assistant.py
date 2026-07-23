@@ -4,7 +4,7 @@ import sys
 import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from core.llm_client import get_ai_response
+from core.llm_client import get_ai_response  # type: ignore[reportMissingImports]
 
 def render_chat_page():
     st.title("🤖 Trợ Lý Phân Tích Định Lượng (Powered by Gemini)")
