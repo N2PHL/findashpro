@@ -3,9 +3,9 @@ import streamlit as st
 import plotly.graph_objects as go
 import sys
 import os
-
+from datetime import datetime, timedelta
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from data.mock_data import get_mock_stock_data
+from data.dnse_client import fetch_historical_data
 from core.alpha_engine import AlphaEngine
 
 def render_alpha_page():
@@ -21,8 +21,21 @@ def render_alpha_page():
     )
     initial_capital = st.sidebar.number_input("Vốn ban đầu (VND)", value=100000000, step=10000000)
 
-    # Fetch Data
-    df = get_mock_stock_data(ticker)
+        # Fetch Data
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=365)
+    start_ts = int(start_date.timestamp())
+    end_ts = int(end_date.timestamp())
+    
+    df = fetch_historical_data(ticker, start_ts, end_ts)
+    
+    # BƯỚC THÊM MỚI: Chuẩn hóa tên cột
+    # 1. Ép toàn bộ tên cột về chữ thường (đề phòng API trả về 'Close', 'Volume'...)
+    df.columns = df.columns.str.lower()
+    
+    # 2. Đổi tên nếu API trả về dạng viết tắt (đề phòng API trả về 'c', 'o', 'h', 'l', 'v')
+    df = df.rename(columns={'c': 'close', 'o': 'open', 'h': 'high', 'l': 'low', 'v': 'volume'})
+    
     
     # Run Alpha Engine
     signal = AlphaEngine.calculate_alpha_signal(df, expression_type=alpha_choice)
@@ -53,4 +66,3 @@ def render_alpha_page():
 
 if __name__ == "__main__":
     render_alpha_page()
-    
