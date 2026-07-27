@@ -1,5 +1,5 @@
-# 5_💼_Portfolio.py module
-# pages/5_💼_Portfolio.py
+# 7_💼_Portfolio.py module
+# pages/7_💼_Portfolio.py
 import streamlit as st
 import pandas as pd
 import plotly.express as px

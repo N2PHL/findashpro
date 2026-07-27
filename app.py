@@ -65,8 +65,8 @@ def render_homepage():
     with col2:
         with st.container(border=True):
             st.markdown("### ⚙️ Định Lượng & Rủi Ro")
-            st.markdown("**4. Monte Carlo:**")
-            st.caption("Chạy hàng nghìn kịch bản mô phỏng để đo lường Value at Risk (VaR) và phân phối lợi nhuận.")
+            st.markdown("**4. Risk Analytics:**")
+            st.caption("Đánh giá rủi ro toàn diện: Đo lường rủi ro hệ thống (Hệ số Beta, Alpha) qua mô hình CAPM và dự phóng rủi ro đuôi (VaR) bằng mô phỏng ngẫu nhiên Monte Carlo.")
             st.markdown("**5. Alpha Backtest:**")
             st.caption("Thiết kế, kiểm thử và tối ưu hóa các biểu thức chiến lược giao dịch (Alpha Factors).")
             st.markdown("**6. Risk Optimization:**")

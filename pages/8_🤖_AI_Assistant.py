@@ -1,4 +1,4 @@
-# pages/6_🤖_AI_Assistant.py
+# pages/8_🤖_AI_Assistant.py
 import streamlit as st
 import sys
 import os

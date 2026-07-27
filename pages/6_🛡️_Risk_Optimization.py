@@ -1,4 +1,4 @@
-# pages/8_🛡️_Risk_Optimization.py
+# pages/6_🛡️_Risk_Optimization.py
 import streamlit as st
 import numpy as np
 import pandas as pd
