@@ -36,7 +36,7 @@ def render_portfolio_page():
     col1, col2 = st.columns([3, 1])
     with col1:
         # Multiselect cho phép chọn nhiều mã
-        default_tickers = ['NVL', 'OCB', 'STK', 'VPH', 'TIP']
+        default_tickers = ['NVL', 'OCB', 'STK', 'VCB', 'TIP']
         available_options = ['FPT', 'VCB', 'VHM', 'HPG', 'VIC', 'MWG'] + default_tickers
         
         selected_tickers = st.multiselect(

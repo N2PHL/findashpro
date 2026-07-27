@@ -1,4 +1,3 @@
-# 4_🎲_Monte_Carlo.py module
 # pages/4_🎲_Monte_Carlo.py
 import streamlit as st
 import pandas as pd
@@ -23,22 +22,51 @@ def load_historical_data(ticker: str, days: int) -> pd.DataFrame:
     return fetch_historical_data(ticker, start_time, end_time)
 
 def render_monte_carlo_page():
-    st.title("🎲 Mô Phỏng Monte Carlo & Value at Risk (VaR)")
+    # --- 1. QUẢN LÝ TRẠNG THÁI (SESSION STATE) ---
+    if 'ticker' not in st.session_state:
+        st.session_state['ticker'] = 'VCB'
+
+    # --- 2. SIDEBAR ĐỒNG BỘ ---
+    st.sidebar.markdown("### ⚙️ Bảng Điều Khiển")
+    st.sidebar.divider()
     
-    ticker = st.session_state.get('current_ticker', 'VPH')
-    st.markdown(f"Dự phóng hành vi giá tương lai cho mã **{ticker}** dựa trên phương sai lịch sử.")
+    input_ticker = st.sidebar.text_input(
+        "Nhập mã cổ phiếu (Ticker):", 
+        value=st.session_state['ticker'],
+        key="monte_carlo_ticker_input" # Key duy nhất cho trang này
+    ).upper()
     
-    # --- KHU VỰC ĐIỀU KHIỂN ---
-    col1, col2 = st.columns(2)
-    with col1:
-        simulations = st.selectbox("Số lượng kịch bản mô phỏng (n):", [200, 500, 1000, 5000], index=1)
-    with col2:
-        time_horizon = st.selectbox("Khung thời gian dự phóng (ngày):", [30, 60, 90, 252], index=0)
+    if input_ticker != st.session_state['ticker']:
+        st.session_state['ticker'] = input_ticker
+        st.rerun()
+
+    current_ticker = st.session_state['ticker']
+
+    # --- 3. GIAO DIỆN CHÍNH (COMMAND CENTER) ---
+    st.markdown("""
+        <style>
+        .terminal-header {
+            font-family: 'Courier New', Courier, monospace;
+            color: #ff9900;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+    st.markdown(f'<h1 class="terminal-header">🎲 Mô Phỏng Monte Carlo: {current_ticker}</h1>', unsafe_allow_html=True)
+    st.caption("Dự phóng hành vi giá tương lai và đo lường rủi ro (VaR) dựa trên phương sai lịch sử.")
+    
+    # --- 4. KHU VỰC ĐIỀU KHIỂN ---
+    with st.container(border=True):
+        st.markdown("**Cấu hình thuật toán**")
+        col1, col2 = st.columns(2)
+        with col1:
+            simulations = st.selectbox("Số lượng kịch bản (n):", [200, 500, 1000, 5000], index=1)
+        with col2:
+            time_horizon = st.selectbox("Khung thời gian dự phóng (ngày):", [30, 60, 90, 252], index=0)
         
-    # --- CHUẨN BỊ DỮ LIỆU ĐẦU VÀO ---
-    # Lấy dữ liệu 1 năm (365 ngày) gần nhất để tính độ lệch chuẩn (Volatility) cho chuẩn xác
-    with st.spinner("Đang tính toán ma trận ngẫu nhiên..."):
-        historical_df = load_historical_data(ticker, days=365)
+    # --- 5. CHUẨN BỊ DỮ LIỆU ĐẦU VÀO ---
+    with st.spinner(f"Đang tính toán ma trận ngẫu nhiên cho mã {current_ticker}..."):
+        historical_df = load_historical_data(current_ticker, days=365)
         
         if historical_df.empty:
             st.error("Không đủ dữ liệu lịch sử để chạy mô phỏng.")
@@ -50,30 +78,29 @@ def render_monte_carlo_page():
         # --- CHẠY CORE LOGIC ---
         simulation_df = run_monte_carlo(close_prices, time_horizon, simulations)
         
-    # --- TÍNH TOÁN METRICS (KPIs) ---
-    # Lấy mảng giá của ngày cuối cùng trong tất cả các kịch bản
+    # --- 6. TÍNH TOÁN METRICS (KPIs) ---
     ending_prices = simulation_df.iloc[-1, :]
     
-    # Tính Value at Risk (VaR) ở mức tin cậy 95% (percentile thứ 5)
+    # Tính Value at Risk (VaR) ở mức tin cậy 95%
     var_95_price = np.percentile(ending_prices, 5)
     var_value = current_price - var_95_price
     expected_price = ending_prices.mean()
     
-    # Hiển thị Metric Cards trực quan
     st.markdown("### 📊 Chỉ số Rủi ro & Kỳ vọng")
-    m1, m2, m3 = st.columns(3)
-        # Chuyển định dạng từ .0f (không thập phân) sang .2f (lấy 2 chữ số thập phân)
-    m1.metric("Giá hiện tại", f"{current_price:,.2f}")
-    m2.metric("Giá kỳ vọng (Trung bình)", f"{expected_price:,.2f}", f"{(expected_price - current_price):,.2f}")
-    m3.metric("VaR 95% (Mức rủi ro tối đa)", f"{var_95_price:,.2f}", f"-{var_value:,.2f}", delta_color="inverse")
+    with st.container(border=True):
+        m1, m2, m3 = st.columns(3)
+        m1.metric("Giá hiện tại", f"{current_price:,.2f}")
+        m2.metric("Giá kỳ vọng (Trung bình)", f"{expected_price:,.2f}", f"{(expected_price - current_price):,.2f}")
+        m3.metric("VaR 95% (Rủi ro tối đa)", f"{var_95_price:,.2f}", f"-{var_value:,.2f}", delta_color="inverse")
 
-    # --- RENDER BIỂU ĐỒ 1: CÁC KỊCH BẢN ĐƯỜNG GIÁ ---
-    st.markdown("### 📈 Biểu đồ các kịch bản (Price Paths)")
+    st.divider()
+
+    # --- 7. RENDER BIỂU ĐỒ KỊCH BẢN GIÁ ---
+    st.markdown("### 📈 Phân mảnh các kịch bản (Price Paths)")
     
     fig_paths = go.Figure()
     
-    # TỐI ƯU HÓA GIAO DIỆN: Chỉ vẽ ngẫu nhiên tối đa 100 đường để web không bị lag,
-    # nhưng tính toán VaR vẫn dựa trên toàn bộ 1000/5000 kịch bản.
+    # Render tối đa 100 đường để đảm bảo FPS mượt mà
     sample_size = min(simulations, 100)
     sampled_columns = np.random.choice(simulation_df.columns, size=sample_size, replace=False)
     
@@ -83,43 +110,52 @@ def render_monte_carlo_page():
                 x=simulation_df.index, 
                 y=simulation_df[col], 
                 mode='lines', 
-                line=dict(width=1, color='rgba(150, 150, 150, 0.2)'), # Màu xám trong suốt
+                line=dict(width=1, color='rgba(100, 149, 237, 0.15)'), # Xanh lam trong suốt hợp với Dark Mode
                 showlegend=False,
-                hoverinfo='skip' # Tắt tooltip cho các đường này để tăng tốc render
+                hoverinfo='skip'
             )
         )
     
-    # Vẽ đè một đường ngang thể hiện giá hiện tại
-    fig_paths.add_hline(y=current_price, line_dash="dash", line_color="red", annotation_text="Giá hiện tại")
+    # Đường giá hiện tại
+    fig_paths.add_hline(y=current_price, line_dash="dash", line_color="#ff9900", annotation_text="Giá hiện tại")
     
     fig_paths.update_layout(
+        template="plotly_dark",
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
         height=500, 
-        margin=dict(l=0, r=0, t=30, b=0),
+        margin=dict(l=0, r=0, t=20, b=0),
         xaxis_title="Ngày dự phóng (t)",
         yaxis_title="Mức Giá"
     )
-    st.plotly_chart(fig_paths, width="stretch")
+    st.plotly_chart(fig_paths, width='stretch')
 
-    # --- RENDER BIỂU ĐỒ 2: PHÂN PHỐI XÁC SUẤT GIÁ KẾT THÚC ---
+    # --- 8. RENDER BIỂU ĐỒ PHÂN PHỐI TẦN SUẤT ---
     st.markdown("### 📉 Phân phối Xác suất & Mức cắt lỗ (VaR)")
     
     fig_dist = px.histogram(
         ending_prices, 
         nbins=50, 
-        title=f"Phân phối Giá sau {time_horizon} ngày",
-        color_discrete_sequence=['#4C78A8']
+        color_discrete_sequence=['#1E88E5'],
+        template="plotly_dark"
     )
     
-    # Vẽ mốc VaR 95%
     fig_dist.add_vline(
         x=var_95_price, 
         line_dash="dot", 
-        line_color="red", 
-        annotation_text=f"VaR 95%: {var_95_price:,.0f}"
+        line_color="#D32F2F", 
+        annotation_text=f"VaR 95%: {var_95_price:,.2f}"
     )
     
-    fig_dist.update_layout(showlegend=False, xaxis_title="Giá kết thúc", yaxis_title="Tần suất")
-    st.plotly_chart(fig_dist, width="stretch")
+    fig_dist.update_layout(
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        showlegend=False, 
+        xaxis_title="Mức giá kết thúc (Terminal Price)", 
+        yaxis_title="Tần suất (Số kịch bản)",
+        margin=dict(l=0, r=0, t=20, b=0)
+    )
+    st.plotly_chart(fig_dist, width='stretch')
 
 if __name__ == "__main__":
     render_monte_carlo_page()

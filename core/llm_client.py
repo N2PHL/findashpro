@@ -1,40 +1,46 @@
 # core/llm_client.py
-import google.generativeai as genai
 import streamlit as st
+from groq import Groq
 
 def get_ai_response(messages: list) -> str:
-    """Gửi lịch sử hội thoại tới Gemini và nhận câu trả lời."""
+    """Gửi lịch sử hội thoại tới Groq (chạy mô hình Llama 3) và nhận câu trả lời siêu tốc."""
     
-    # 1. Khởi tạo kết nối bằng Key trong két sắt
-    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-    
-    # 2. Cấu hình mô hình và "Nhân cách" định lượng
-    model = genai.GenerativeModel(
-        model_name="gemini-1.5-flash", # Bản Flash siêu tốc, phù hợp cho Chatbot
-        system_instruction=(
-            "Bạn là một chuyên gia phân tích định lượng (Quant Analyst) và tư vấn tài chính. "
-            "Bạn am hiểu sâu sắc về kinh tế học đầu tư, các mô hình định giá, và quản trị rủi ro. "
-            "Câu trả lời của bạn phải ngắn gọn, sắc bén, dựa trên dữ liệu và loại bỏ cảm tính."
-        )
-    )
-    
-    # 3. Chuyển đổi lịch sử chat từ chuẩn Streamlit sang chuẩn Gemini
-    # Gemini dùng 'user' và 'model' thay vì 'user' và 'assistant'
-    gemini_history = []
-    
-    # Lấy toàn bộ tin nhắn ngoại trừ câu hỏi cuối cùng để làm bối cảnh
-    for msg in messages[:-1]:
-        role = "user" if msg["role"] == "user" else "model"
-        gemini_history.append({"role": role, "parts": [msg["content"]]})
-        
     try:
-        # Khởi tạo phiên chat với bối cảnh cũ
-        chat = model.start_chat(history=gemini_history)
+        # 1. Khởi tạo Client với API Key từ bảo mật Streamlit
+        client = Groq(api_key=st.secrets["GROQ_API_KEY"])
         
-        # Gửi câu hỏi mới nhất (phần tử cuối cùng trong list messages)
-        response = chat.send_message(messages[-1]["content"])
-        return response.text
+        # 2. Đóng gói "Nhân cách" (System Instruction)
+        # Khác với Gemini, Groq nhận System Prompt trực tiếp như một tin nhắn đầu tiên
+        groq_messages = [
+            {
+                "role": "system",
+                "content": (
+                    "Bạn là một chuyên gia phân tích định lượng (Quant Analyst) và tư vấn tài chính. "
+                    "Bạn am hiểu sâu sắc về kinh tế học đầu tư, các mô hình định giá, và quản trị rủi ro. "
+                    "Câu trả lời của bạn phải ngắn gọn, sắc bén, dựa trên dữ liệu và loại bỏ cảm tính."
+                )
+            }
+        ]
+        
+        # 3. Kế thừa trực tiếp lịch sử chat từ Streamlit (không cần biến đổi role)
+        for msg in messages:
+            groq_messages.append({
+                "role": msg["role"], 
+                "content": msg["content"]
+            })
+            
+                 # 4. Gửi truy vấn tới máy chủ Groq
+        # ĐÃ SỬA: Sử dụng model mã nguồn mở thế hệ mới nhất theo tài liệu Deprecation của Groq
+        chat_completion = client.chat.completions.create(
+            messages=groq_messages,
+            model="openai/gpt-oss-120b", 
+            temperature=0.2, 
+            max_tokens=2048
+        )
+        
+        # 5. Trích xuất và trả về kết quả
+        return chat_completion.choices[0].message.content
         
     except Exception as e:
-        return f"⚠️ Lỗi kết nối API Gemini: {str(e)}"
-        
+        return f"⚠️ Lỗi kết nối luồng dữ liệu Groq API: {str(e)}"
+    
