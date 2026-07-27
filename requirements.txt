@@ -61,3 +61,4 @@ uvicorn==0.51.0
 websockets==16.1.1
 scipy
 groq
+yfinance
