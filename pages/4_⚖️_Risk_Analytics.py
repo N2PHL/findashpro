@@ -72,7 +72,7 @@ def render_monte_carlo_page():
 
                 fig = px.line(sim_df.sample(n=min(sims, 100), axis=1), template="plotly_dark")
                 fig.update_layout(showlegend=False, xaxis_title="Ngày", yaxis_title="Giá")
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width='stretch')
 
     with tab_capm:
         st.subheader("Capital Asset Pricing Model (CAPM)")
@@ -93,7 +93,7 @@ def render_monte_carlo_page():
                 c3.metric("R-squared", f"{model.rsquared*100:.2f}%")
                 
                 fig = px.scatter(data, x='VNINDEX', y=current_ticker, trendline='ols', template="plotly_dark")
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width='stretch')
 
 if __name__ == "__main__":
     render_monte_carlo_page()
