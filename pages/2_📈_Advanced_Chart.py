@@ -73,7 +73,7 @@ def render_advanced_chart():
     )
     
     # 3. Hiển thị lên Streamlit, cho phép mở rộng full width
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 if __name__ == "__main__":
     render_advanced_chart()

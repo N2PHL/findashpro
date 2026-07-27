@@ -98,7 +98,7 @@ def render_monte_carlo_page():
         xaxis_title="Ngày dự phóng (t)",
         yaxis_title="Mức Giá"
     )
-    st.plotly_chart(fig_paths, use_container_width=True)
+    st.plotly_chart(fig_paths, width="stretch")
 
     # --- RENDER BIỂU ĐỒ 2: PHÂN PHỐI XÁC SUẤT GIÁ KẾT THÚC ---
     st.markdown("### 📉 Phân phối Xác suất & Mức cắt lỗ (VaR)")
@@ -119,7 +119,7 @@ def render_monte_carlo_page():
     )
     
     fig_dist.update_layout(showlegend=False, xaxis_title="Giá kết thúc", yaxis_title="Tần suất")
-    st.plotly_chart(fig_dist, use_container_width=True)
+    st.plotly_chart(fig_dist, width="stretch")
 
 if __name__ == "__main__":
     render_monte_carlo_page()

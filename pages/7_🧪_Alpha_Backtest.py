@@ -35,7 +35,7 @@ def render_alpha_page():
     
     # 2. Đổi tên nếu API trả về dạng viết tắt (đề phòng API trả về 'c', 'o', 'h', 'l', 'v')
     df = df.rename(columns={'c': 'close', 'o': 'open', 'h': 'high', 'l': 'low', 'v': 'volume'})
-    
+
     
     # Run Alpha Engine
     signal = AlphaEngine.calculate_alpha_signal(df, expression_type=alpha_choice)
@@ -62,7 +62,7 @@ def render_alpha_page():
         template="plotly_white",
         height=500
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 if __name__ == "__main__":
     render_alpha_page()

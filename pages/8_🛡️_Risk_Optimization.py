@@ -109,7 +109,7 @@ def render_risk_page():
         template="plotly_white",
         height=500
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 if __name__ == "__main__":
     render_risk_page()

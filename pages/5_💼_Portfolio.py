@@ -83,7 +83,7 @@ def render_portfolio_page():
     # Thêm đường tham chiếu 0% (Hòa vốn) để làm mốc so sánh trực quan
     fig.add_hline(y=0, line_dash="dash", line_color="white", opacity=0.5, annotation_text="0% (Hòa vốn)")
     
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 if __name__ == "__main__":
     render_portfolio_page()
