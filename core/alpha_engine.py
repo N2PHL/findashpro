@@ -45,19 +45,43 @@ class AlphaEngine:
         return signal.fillna(0)
 
     @staticmethod
-    def backtest_signal(df: pd.DataFrame, signal: pd.Series, initial_capital: float = 100_000_000.0) -> dict:
+    def backtest_signal(
+        df: pd.DataFrame, 
+        signal: pd.Series, 
+        initial_capital: float = 100_000_000.0,
+        transaction_cost: float = 0.0015  # Phí giao dịch + Thuế + Slippage mặc định = 0.15% mỗi lượt
+    ) -> dict:
         """
         Giả lập Backtest giao dịch theo tín hiệu Alpha (Long/Short/Cash).
+        Đã bổ sung chi phí giao dịch & trượt giá (Transaction Costs & Slippage) chuẩn Quant.
         """
+        if df.empty:
+            return {
+                'data': pd.DataFrame(),
+                'total_return': 0.0,
+                'ann_return': 0.0,
+                'sharpe_ratio': 0.0,
+                'max_drawdown': 0.0,
+                'win_rate': 0.0,
+                'final_equity': initial_capital
+            }
+
         data = df.copy()
         data['signal'] = signal
+        
         # Shift vị thế 1 ngày để tránh Look-ahead Bias (Lỗi nhìn trước tương lai)
         data['position'] = data['signal'].shift(1).fillna(0)
         data['position'] = np.clip(data['position'], -1.0, 1.0)
         
-        # Lợi nhuận hàng ngày
+        # Tính mức độ xoay chuyển vị thế (Turnover)
+        # Ví dụ: Đang 0 -> Mua (1) = Thay đổi 1 | Đang Mua (1) -> Bán (-1) = Thay đổi 2
+        data['turnover'] = data['position'].diff().abs().fillna(0)
+        
+        # Lợi nhuận thị trường hàng ngày
         data['market_return'] = data['close'].pct_change().fillna(0)
-        data['strategy_return'] = data['position'] * data['market_return']
+        
+        # Lợi nhuận chiến lược = (Vị thế * Biến động giá) - (Tần suất đảo vị thế * Phí giao dịch)
+        data['strategy_return'] = (data['position'] * data['market_return']) - (data['turnover'] * transaction_cost)
         
         # Đường cong tài sản (Equity Curve)
         data['cum_market_return'] = (1 + data['market_return']).cumprod()
@@ -73,7 +97,7 @@ class AlphaEngine:
         
         # Max Drawdown
         cum_max = data['equity'].cummax()
-        drawdown = (data['equity'] - cum_max) / cum_max
+        drawdown = (data['equity'] - cum_max) / (cum_max + 1e-9)
         max_drawdown = drawdown.min()
         
         # Win Rate

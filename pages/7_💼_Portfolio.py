@@ -45,7 +45,7 @@ def render_portfolio_page():
             default=default_tickers
         )
     with col2:
-        days_back = st.selectbox("Khung thời gian (Ngày):", [90, 180, 365, 730, 1825], index=2)
+        days_back = st.selectbox("Khung thời gian (Ngày):", [90, 180, 365, 730, 1460], index=2)
         
     if not selected_tickers:
         st.warning("Vui lòng chọn ít nhất một mã cổ phiếu.")
