@@ -7,9 +7,18 @@ danh mục. Mọi trang đọc chung một mã cổ phiếu từ session state v
 số thị trường khai báo ở utils/config.py, để các con số giữa các trang so sánh được
 với nhau.
 
-Phạm vi dữ liệu được nêu tường minh ở cuối trang chủ: giá cuối phiên từ DNSE/entrade
-cho cổ phiếu niêm yết tại Việt Nam, dữ liệu cơ bản từ Yahoo Finance với độ phủ hạn
-chế. Đây là sản phẩm học thuật, không phải khuyến nghị đầu tư.
+ĐIỀU HƯỚNG KHAI BÁO TRONG CODE, KHÔNG SUY TỪ TÊN FILE.
+
+Cơ chế mặc định của Streamlit là đọc thư mục pages/ và dựng nhãn sidebar từ chính
+tên file, nên nhãn muốn có biểu tượng thì tên file phải chứa emoji. Cách đó hỏng ở
+đúng một chỗ: tên file emoji được lưu dưới dạng UTF-8, nhưng file nén không bật cờ
+UTF-8 sẽ được Windows giải mã theo CP437, biến "1_📊_Summary.py" thành
+"1_≡ƒôè_Summary.py". Tên hỏng thì nhãn sidebar hỏng theo, và vì tên cũ với tên mới
+khác nhau nên GitHub coi là hai file riêng — sidebar hiện 16 trang.
+
+st.navigation cắt đứt phụ thuộc đó: tên file thuần ASCII, còn tiêu đề và biểu tượng
+khai báo ngay dưới đây. Đổi nhãn không cần đổi tên file, và nhãn tiếng Việt có dấu
+hiển thị đúng trên mọi hệ điều hành.
 """
 import streamlit as st
 
@@ -71,5 +80,30 @@ def render_homepage() -> None:
     st.caption("Sản phẩm học thuật. Không phải khuyến nghị đầu tư.")
 
 
-if __name__ == "__main__":
-    render_homepage()
+# ---------------------------------------------------------------------------
+# ĐIỀU HƯỚNG
+# ---------------------------------------------------------------------------
+# Cấu hình trang phải chạy TRƯỚC st.navigation, nếu không Streamlit dựng sidebar
+# ở layout mặc định rồi mới nhận lệnh đổi sang wide.
+st.set_page_config(page_title="FinDash Pro", page_icon="📊",
+                   layout="wide", initial_sidebar_state="expanded")
+
+PAGES = {
+    "Dữ liệu & Cơ bản": [
+        st.Page(render_homepage, title="Trang chủ", icon="🏠", default=True),
+        st.Page("pages/1_Summary.py", title="Tổng quan", icon="📊"),
+        st.Page("pages/2_Advanced_Chart.py", title="Biểu đồ nâng cao", icon="📈"),
+        st.Page("pages/3_Financials.py", title="Tài chính & Thống kê", icon="📑"),
+    ],
+    "Định lượng & Rủi ro": [
+        st.Page("pages/4_Risk_Analytics.py", title="Phân tích rủi ro", icon="⚖️"),
+        st.Page("pages/5_Alpha_Backtest.py", title="Kiểm thử chiến lược", icon="🧪"),
+        st.Page("pages/6_Risk_Optimization.py", title="Tối ưu danh mục", icon="🛡️"),
+    ],
+    "Quản lý & Trợ lý": [
+        st.Page("pages/7_Portfolio.py", title="Danh mục đầu tư", icon="💼"),
+        st.Page("pages/8_AI_Assistant.py", title="Trợ lý AI", icon="🤖"),
+    ],
+}
+
+st.navigation(PAGES).run()
