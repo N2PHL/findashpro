@@ -1,5 +1,31 @@
-venv/
-__pycache__/
-.DS_Store
+# ---- KHÓA VÀ BÍ MẬT — dòng quan trọng nhất trong file này ----
+.streamlit/secrets.toml
+*.env
 .env
-.streamlit/
+.env.*
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# ---- Môi trường ảo ----
+venv/
+.venv/
+env/
+
+# ---- Trình soạn thảo ----
+.vscode/
+.idea/
+*.swp
+
+# ---- Hệ điều hành ----
+.DS_Store
+Thumbs.db
+
+# ---- Dữ liệu tạm ----
+*.log
+cache/
+data/cache/
